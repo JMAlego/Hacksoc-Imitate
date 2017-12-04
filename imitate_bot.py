@@ -47,8 +47,8 @@ class ImitateBot(object):
   def imitate(self, name):
     if self.slack._find_user_name(name):
       mk_text = self.db.get_name_messages_string(name)
-      mk = markovify.Text(mk_text)
-      return mk.make_sentence()
+      mk = markovify.NewlineText(mk_text)
+      return mk.make_sentence(max_words=2000, tries=50)
     return False
 
   def handle_message(self, event):
