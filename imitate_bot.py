@@ -10,7 +10,7 @@ import markovify
 from slacksocket import SlackSocket
 from imitate_db import ImitateDB
 
-COMMAND_REGEX = re.compile(r"^!imitate <@(?P<user>U[A-Z0-9]+)>$", flags=re.IGNORECASE)
+COMMAND_REGEX = re.compile(r"^!imitate <@(?P<user>U[A-Z0-9]+)>[ ]*$", flags=re.IGNORECASE)
 
 class ImitateBot(object):
   def __exit__(self, exc_type, exc_value, exc_traceback):
