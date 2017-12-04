@@ -56,7 +56,7 @@ class ImitateBot(object):
       if mk_text is None:
         return None
       mk = markovify.NewlineText(mk_text)
-      return mk.make_sentence()
+      return mk.make_sentence(tires=100, max_words=2500)
     if self.debug_mode:
       print "[debug] Could not find user:", name
     return False
