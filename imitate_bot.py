@@ -22,7 +22,7 @@ class ImitateBot(object):
       while self.slack._thread.isAlive():
         sleep(0.01)
 
-  def __init__(self, bot_key, db, bot_id = None):
+  def __init__(self, bot_key, db, bot_id = None, debug_mode=False):
     if bot_key is None:
       raise Exception("Slack Bot Key Required")
     else:
@@ -33,6 +33,7 @@ class ImitateBot(object):
     self.slack = None
     self.db = db
     self.bot_id = bot_id
+    self.debug_mode = debug_mode
 
   def start(self):
     self.slack = SlackSocket(
@@ -46,11 +47,17 @@ class ImitateBot(object):
 
   def imitate(self, name):
     if self.slack._find_user_name(name):
+      if self.debug_mode:
+        print "[debug] Generating chain for:", name
       mk_text = self.db.get_name_messages_string(name)
+      if self.debug_mode:
+        print "[debug] Got", len(mk_text), "characters of data"
       if mk_text is None:
         return None
       mk = markovify.NewlineText(mk_text)
       return mk.make_sentence(max_words=2000, tries=50)
+    if self.debug_mode:
+      print "[debug] Could not find user:", name
     return False
 
   def handle_message(self, event):
@@ -86,8 +93,10 @@ if __name__ == "__main__":
 
   print "Imitate Bot Initialising..."
 
-  db = ImitateDB()
-  bot = ImitateBot(config.get("imitate_bot", "bot_auth_token"), db, config.get("imitate_bot", "bot_id"))
+  debug = config.get("imitate_bot", "debug").lower() == "true" or config.get("imitate_bot", "debug") == "1"
+
+  db = ImitateDB(debug_mode=debug)
+  bot = ImitateBot(config.get("imitate_bot", "bot_auth_token"), db, config.get("imitate_bot", "bot_id"), debug_mode=debug)
 
   def _exit_signal_handler(sig, frame):
     print('Exiting...')

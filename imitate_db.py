@@ -43,8 +43,9 @@ class ImitateDB(object):
   def __init__(self,
                 data_directory="./data/imitate_db/",
                 max_cache_entries=5,
-                cache_flexability=2,
-                flexible_cache_step=0.5
+                cache_flexability=3,
+                flexible_cache_step=0.5,
+                debug_mode=False
               ):
     self.data_directory = data_directory
     self.max_cache_entries = max_cache_entries if max_cache_entries > 0 else 1
@@ -55,6 +56,8 @@ class ImitateDB(object):
     self.flexable_cache_index = 0
     self.cache_flexability = cache_flexability if cache_flexability > -1 else 0
     self.flexible_cache_step = flexible_cache_step if flexible_cache_step > 0 else 0.5
+    self.names_needed_in_cache = {}
+    self.debug_mode = debug_mode
 
     if not os.path.isdir(self.data_directory):
       os.makedirs(self.data_directory)
@@ -197,14 +200,20 @@ class ImitateDB(object):
     return self.db_cache.has_key(name)
 
   def _restrict_cache(self):
+    if self.debug_mode:
+      print "[debug] Restricting cache..."
     max_entries = self.max_cache_entries + math.floor(self.flexable_cache_index)
     number_to_remove = len(self.db_cache) - max_entries
     if number_to_remove < 0:
       if self.flexable_cache_index > 0:
         self.flexable_cache_index -= self.flexible_cache_step
+        if self.debug_mode:
+          print "[debug] Reducing flexable cache to:", self.flexable_cache_index
     elif number_to_remove > 0:
       if self.flexable_cache_index < self.cache_flexability:
         self.flexable_cache_index += self.flexible_cache_step
+        if self.debug_mode:
+          print "[debug] Increasing flexable cache to:", self.flexable_cache_index
     if number_to_remove > 0:
       entries_to_remove = []
       for name, data in self.db_cache.items():
@@ -212,14 +221,22 @@ class ImitateDB(object):
           entries_to_remove.append((name, data["last_update"]))
         else:
           for entry in entries_to_remove:
-            if data["last_update"] > entry[1]:
+            if data["last_update"] < entry[1]:
               entries_to_remove.remove(entry)
               entries_to_remove.append((name, data["last_update"]))
       for to_remove in entries_to_remove:
-        self._write_user_file(to_remove[0], self.db_cache[to_remove[0]])
-        del self.db_cache[to_remove[0]]
+        if not self.names_needed_in_cache.has_key(to_remove[0]):
+          if self.debug_mode:
+            print "          Unloading name:", to_remove[0]
+          self._write_user_file(to_remove[0], self.db_cache[to_remove[0]])
+          del self.db_cache[to_remove[0]]
+        else:
+          if self.debug_mode:
+            print "          Skipping required name:", to_remove[0]
 
   def _load_name_into_cache(self, name):
+    if self.debug_mode:
+      print "[debug] Loading into cache:", name
     if self.meta["names"].has_key(name):
       self._restrict_cache()
       if not self._in_cache(name):
@@ -230,8 +247,15 @@ class ImitateDB(object):
     return False
 
   def get_name_messages(self, name):
+    if self.debug_mode:
+      print "[debug] Getting messages for name:", name
+    self._need_name(name)
     if self._load_name_into_cache(name):
-      return self.db_cache[name]["messages"]
+      result = self.db_cache[name]["messages"]
+      self._stop_needing_name(name)
+      self._restrict_cache()
+      return result
+    self._stop_needing_name(name)
     return None
 
   def get_name_messages_string(self, name):
@@ -240,12 +264,31 @@ class ImitateDB(object):
       return "\n".join(result)
     return None
 
+  def _need_name(self, name):
+    if self.names_needed_in_cache.has_key(name):
+      self.names_needed_in_cache[name] += 1
+    else:
+      self.names_needed_in_cache[name] = 1
+    if self.debug_mode:
+      print "[debug] Needing name:", name, "now at", self.names_needed_in_cache[name]
+
+  def _stop_needing_name(self, name):
+    if self.names_needed_in_cache.has_key(name):
+      self.names_needed_in_cache[name] -= 1
+      if self.debug_mode:
+        print "[debug] Un-needing name:", name, "now at", self.names_needed_in_cache[name]
+      if self.names_needed_in_cache[name] == 0:
+        del self.names_needed_in_cache[name]
+
   def add_message(self, name, message):
     if not self.user_exists(name):
       self.add_user(name)
+    self._need_name(name)
     self._load_name_into_cache(name)
     self.db_cache[name]["messages"].append(message)
     self.db_cache[name]["last_update"] = time.time()
+    self._stop_needing_name(name)
+    self._restrict_cache()
 
 if __name__ == "__main__":
   print "Testing..."
