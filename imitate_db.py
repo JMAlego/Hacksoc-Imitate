@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """
   Database module for ImitateBot
@@ -261,7 +262,7 @@ class ImitateDB(object):
   def get_name_messages_string(self, name):
     result = self.get_name_messages(name)
     if result:
-      return "\n".join(result)
+      return "\r\n".join(result).encode('ascii', 'ignore')
     return None
 
   def _need_name(self, name):

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from time import sleep
 import signal
 import sys
@@ -55,7 +56,7 @@ class ImitateBot(object):
       if mk_text is None:
         return None
       mk = markovify.NewlineText(mk_text)
-      return mk.make_sentence(max_words=2000, tries=50)
+      return mk.make_sentence()
     if self.debug_mode:
       print "[debug] Could not find user:", name
     return False
@@ -75,7 +76,7 @@ class ImitateBot(object):
         if command:
           msg = self.imitate(command.group("user"))
           if msg:
-            self.slack.send_msg(msg, channel_id=event.event["channel"], confirm=False)
+            self.slack.send_msg("I think <@" + command.group("user") + "> might say:\n" + ">>> " + msg, channel_id=event.event["channel"], confirm=False)
           else:
             if msg == None:
               self.slack.send_msg("Not enough data on user...", channel_id=event.event["channel"], confirm=False)
