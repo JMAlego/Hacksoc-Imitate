@@ -47,6 +47,8 @@ class ImitateBot(object):
   def imitate(self, name):
     if self.slack._find_user_name(name):
       mk_text = self.db.get_name_messages_string(name)
+      if mk_text is None:
+        return None
       mk = markovify.NewlineText(mk_text)
       return mk.make_sentence(max_words=2000, tries=50)
     return False
@@ -56,7 +58,7 @@ class ImitateBot(object):
       return
     if event.event.has_key("subtype") and event.event["subtype"] == "bot_message":
       return
-    if self.bot_id != None and event.event["user"] == self.bot_id:
+    if self.bot_id is not None and event.event["user"] == self.bot_id:
       return
     if event.event["text"].startswith("!imitate"):
       if event.event["text"] == "!imitate":
