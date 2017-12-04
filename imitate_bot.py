@@ -50,10 +50,10 @@ class ImitateBot(object):
   def imitate(self, name):
     if self.slack._find_user_name(name):
       if self.debug_mode:
-        print "[debug] Generating chain for:", name
+        print "[debug] Generating chain for:", name if name else None
       mk_text = self.db.get_name_messages_string(name)
       if self.debug_mode:
-        print "[debug] Got", len(mk_text), "characters of data"
+        print "[debug] Got", len(mk_text if mk_text else ""), "characters of data"
       if mk_text is None:
         return None
       mk = markovify.NewlineText(mk_text)
@@ -64,7 +64,7 @@ class ImitateBot(object):
           break
       return result
     if self.debug_mode:
-      print "[debug] Could not find user:", name
+      print "[debug] Could not find user:", name if name else None
     return False
 
   def handle_message(self, event):
@@ -90,6 +90,7 @@ class ImitateBot(object):
               self.slack.send_msg("User not found!", channel_id=event.event["channel"], confirm=False)
         else:
           self.slack.send_msg("Usage: !imitate @USERNAME", channel_id=event.event["channel"], confirm=False)
+          print "[debug] Weird stuff:", event.event
     else:
       self.db.add_message(event.event["user"], event.event["text"])
 
