@@ -23,7 +23,7 @@ class ImitateBot(object):
       while self.slack._thread.isAlive():
         sleep(0.01)
 
-  def __init__(self, bot_key, db, bot_id = None, debug_mode=False):
+  def __init__(self, bot_key, db, bot_id = None, debug_mode=False, imitate_attempts=100):
     if bot_key is None:
       raise Exception("Slack Bot Key Required")
     else:
@@ -35,6 +35,7 @@ class ImitateBot(object):
     self.db = db
     self.bot_id = bot_id
     self.debug_mode = debug_mode
+    self.imitate_attempts = imitate_attempts
 
   def start(self):
     self.slack = SlackSocket(
@@ -56,7 +57,12 @@ class ImitateBot(object):
       if mk_text is None:
         return None
       mk = markovify.NewlineText(mk_text)
-      return mk.make_sentence(tires=100, max_words=2500)
+      result = None
+      for i in range(self.imitate_attempts):
+        result = mk.make_sentence(tires=100, max_words=2500)
+        if result:
+          break
+      return result
     if self.debug_mode:
       print "[debug] Could not find user:", name
     return False
