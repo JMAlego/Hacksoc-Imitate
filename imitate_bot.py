@@ -23,7 +23,7 @@ class ImitateBot(object):
       while self.slack._thread.isAlive():
         sleep(0.01)
 
-  def __init__(self, bot_key, db, bot_id = None, debug_mode=False, imitate_attempts=100):
+  def __init__(self, bot_key, db_in, bot_id=None, debug_mode=False, imitate_attempts=100):
     if bot_key is None:
       raise Exception("Slack Bot Key Required")
     else:
@@ -32,7 +32,7 @@ class ImitateBot(object):
     self._started = False
     self._closing = False
     self.slack = None
-    self.db = db
+    self.db = db_in
     self.bot_id = bot_id
     self.debug_mode = debug_mode
     self.imitate_attempts = imitate_attempts
@@ -58,7 +58,7 @@ class ImitateBot(object):
         return None
       mk = markovify.NewlineText(mk_text)
       result = None
-      for i in range(self.imitate_attempts):
+      for _ in range(self.imitate_attempts):
         result = mk.make_sentence(tires=100, max_words=2500)
         if result:
           break
@@ -84,7 +84,7 @@ class ImitateBot(object):
           if msg:
             self.slack.send_msg("I think <@" + command.group("user") + "> might say:\n" + ">>> " + msg, channel_id=event.event["channel"], confirm=False)
           else:
-            if msg == None:
+            if msg is None:
               self.slack.send_msg("Not enough data on user...", channel_id=event.event["channel"], confirm=False)
             else:
               self.slack.send_msg("User not found!", channel_id=event.event["channel"], confirm=False)

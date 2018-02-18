@@ -194,7 +194,10 @@ class ImitateDB(object):
     if self.user_exists(name):
       return False
     self._write_user_file(name, self._default_user_data(name))
-    self.meta["names"][name] = self._hash_name(name)
+    self.meta["names"][self._get_true_name(name)] = self._hash_name(name)
+    self.db_cache[name] = {}
+    self.db_cache[name]["messages"] = []
+    self.db_cache[name]["last_update"] = time.time()
     return True
 
   def _in_cache(self, name):
