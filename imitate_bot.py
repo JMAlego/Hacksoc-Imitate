@@ -12,6 +12,7 @@ from imitate_db import ImitateDB
 
 COMMAND_REGEX = re.compile(r"^!imitate <@(?P<user>U[A-Z0-9]+)>[ ]*$", flags=re.IGNORECASE)
 
+
 class ImitateBot(object):
   def __exit__(self, exc_type, exc_value, exc_traceback):
     self.close()
@@ -68,9 +69,9 @@ class ImitateBot(object):
     return False
 
   def handle_message(self, event):
-    if not event.event.has_key("user"):
+    if "user" not in event.event:
       return
-    if event.event.has_key("subtype") and event.event["subtype"] == "bot_message":
+    if event.event.get("subtype") == "bot_message":
       return
     if self.bot_id is not None and event.event["user"] == self.bot_id:
       return
