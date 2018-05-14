@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""Slackbot module for ImitateBot."""
+
 from time import sleep
 import signal
 import sys
@@ -13,10 +15,14 @@ from imitate_db import ImitateDB
 COMMAND_REGEX = re.compile(r"^!imitate <@(?P<user>U[A-Z0-9]+)>[ ]*$", flags=re.IGNORECASE)
 
 class ImitateBot(object):
+  """The bot that handles everything Slack related."""
+
   def __exit__(self, exc_type, exc_value, exc_traceback):
+    """Ensure SlackSocket thread is closed before quitting."""
     self.close()
 
   def close(self):
+    """Prevent quit until SlackSocket thread is closed."""
     if self._initialised and self._started and not self._closing:
       self._closing = True
       self.slack.close()
@@ -24,6 +30,7 @@ class ImitateBot(object):
         sleep(0.01)
 
   def __init__(self, bot_key, db_in, bot_id=None, debug_mode=False, imitate_attempts=100):
+    """Setup variables for bot."""
     if bot_key is None:
       raise Exception("Slack Bot Key Required")
     else:
@@ -38,6 +45,7 @@ class ImitateBot(object):
     self.imitate_attempts = imitate_attempts
 
   def start(self):
+    """Start SlackSocket thread and enter main loop."""
     self.slack = SlackSocket(
       self.bot_key,
       translate=False,
@@ -48,6 +56,7 @@ class ImitateBot(object):
       self.handle_message(event)
 
   def imitate(self, name):
+    """Generate an imitate string for a user."""
     if self.slack._find_user_name(name):
       if self.debug_mode:
         print "[debug] Generating chain for:", name if name else None
@@ -68,6 +77,7 @@ class ImitateBot(object):
     return False
 
   def handle_message(self, event):
+    """Parse messages and react in the necessary way."""
     if not event.event.has_key("user"):
       return
     if event.event.has_key("subtype") and event.event["subtype"] == "bot_message":
