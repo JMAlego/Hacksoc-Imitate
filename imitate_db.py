@@ -48,6 +48,7 @@ class ImitateDB(object):
                 flexible_cache_step=0.5,
                 debug_mode=False
               ):
+    self._alive = True
     self.data_directory = data_directory
     self.max_cache_entries = max_cache_entries if max_cache_entries > 0 else 1
     self.meta_file = os.path.join(data_directory, "meta.json")
@@ -79,7 +80,7 @@ class ImitateDB(object):
     self.close()
 
   def __del__(self):
-    if self.meta and self.data_directory:
+    if self._alive and self.meta and self.data_directory:
       self.close(write_back_cache=False)
 
   @staticmethod
@@ -147,6 +148,7 @@ class ImitateDB(object):
     return result
 
   def close(self, write_back_cache=True):
+    self._alive = False
     self.write_back(write_back_cache=write_back_cache)
 
   def write_back(self, write_back_cache=True):
