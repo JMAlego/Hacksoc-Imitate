@@ -242,7 +242,7 @@ class ImitateDB(object):
 
   def _load_name_into_cache(self, name):
     if self.debug_mode:
-      print "[debug] Loading into cache:", name
+      print("[debug] Loading into cache:", name)
     if self.meta["names"].has_key(name):
       self._restrict_cache()
       if not self._in_cache(name):
