@@ -11,9 +11,9 @@ import math
 VERSION = "1.0.0"
 
 EMPTY_META = {
-  "version":"1.0.0",
-  "names":{},
-  "aliases":{}
+  "version": "1.0.0",
+  "names": {},
+  "aliases": {}
 }
 
 EMPTY_USER = {
@@ -21,6 +21,7 @@ EMPTY_USER = {
   "last_update": None,
   "messages": []
 }
+
 
 class Enum(set):
   """Basic enum class, simpler than the python stdlib version."""
@@ -31,22 +32,24 @@ class Enum(set):
       return name
     raise AttributeError
 
+
 INTEGRITY = Enum(["OKAY",
                   "MISSING_USER_FILE",
                   "ALIAS_MISMATCH",
                   "NAME_FILE_COLLISION",
                   "EXTRANEOUS_NAME_FILES"])
 
+
 class ImitateDB(object):
   """ImitateBot database management and access class."""
 
   def __init__(self,
-                data_directory="./data/imitate_db/",
-                max_cache_entries=5,
-                cache_flexability=3,
-                flexible_cache_step=0.5,
-                debug_mode=False
-              ):
+               data_directory="./data/imitate_db/",
+               max_cache_entries=5,
+               cache_flexability=3,
+               flexible_cache_step=0.5,
+               debug_mode=False
+               ):
     """Set up directories, files, and read database metafile."""
     self._alive = True
     self.data_directory = data_directory
@@ -88,7 +91,7 @@ class ImitateDB(object):
   @staticmethod
   def _default_user_data(name):
     return {
-      "name":name,
+      "name": name,
       "last_update": None,
       "messages": []
     }
@@ -196,7 +199,7 @@ class ImitateDB(object):
 
   def user_exists(self, name):
     """See if a user is in the list of users."""
-    return self.meta["names"].has_key(self._get_true_name(name))
+    return self._get_true_name(name) in self.meta["names"]
 
   def add_user(self, name):
     """Add a user to the list of users."""
@@ -210,7 +213,7 @@ class ImitateDB(object):
     return True
 
   def _in_cache(self, name):
-    return self.db_cache.has_key(name)
+    return name in self.db_cache
 
   def _restrict_cache(self):
     if self.debug_mode:
@@ -238,7 +241,7 @@ class ImitateDB(object):
               entries_to_remove.remove(entry)
               entries_to_remove.append((name, data["last_update"]))
       for to_remove in entries_to_remove:
-        if not self.names_needed_in_cache.has_key(to_remove[0]):
+        if to_remove[0] not in self.names_needed_in_cache:
           if self.debug_mode:
             print("          Unloading name:", to_remove[0])
           self._write_user_file(to_remove[0], self.db_cache[to_remove[0]])
@@ -250,7 +253,7 @@ class ImitateDB(object):
   def _load_name_into_cache(self, name):
     if self.debug_mode:
       print("[debug] Loading into cache:", name)
-    if self.meta["names"].has_key(name):
+    if name in self.meta["names"]:
       self._restrict_cache()
       if not self._in_cache(name):
         name_data = self._read_user_file(name)
@@ -280,7 +283,7 @@ class ImitateDB(object):
     return None
 
   def _need_name(self, name):
-    if self.names_needed_in_cache.has_key(name):
+    if name in self.names_needed_in_cache:
       self.names_needed_in_cache[name] += 1
     else:
       self.names_needed_in_cache[name] = 1
@@ -288,7 +291,7 @@ class ImitateDB(object):
       print("[debug] Needing name:", name, "now at", self.names_needed_in_cache[name])
 
   def _stop_needing_name(self, name):
-    if self.names_needed_in_cache.has_key(name):
+    if name in self.names_needed_in_cache:
       self.names_needed_in_cache[name] -= 1
       if self.debug_mode:
         print("[debug] Un-needing name:", name, "now at", self.names_needed_in_cache[name])
@@ -305,6 +308,7 @@ class ImitateDB(object):
     self.db_cache[name]["last_update"] = time.time()
     self._stop_needing_name(name)
     self._restrict_cache()
+
 
 if __name__ == "__main__":
   print("Testing...")
