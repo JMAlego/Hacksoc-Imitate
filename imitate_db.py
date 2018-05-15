@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-"""
-  Database module for ImitateBot
-  by Jacob Allen
-"""
+"""Database module for ImitateBot."""
 
 import os
 import hashlib
@@ -27,7 +23,10 @@ EMPTY_USER = {
 }
 
 class Enum(set):
+  """Basic enum class, simpler than the python stdlib version."""
+
   def __getattr__(self, name):
+    """Use enum.attribute as values."""
     if name in self:
       return name
     raise AttributeError
@@ -39,7 +38,7 @@ INTEGRITY = Enum(["OKAY",
                   "EXTRANEOUS_NAME_FILES"])
 
 class ImitateDB(object):
-  """ImitateBot database management and access class"""
+  """ImitateBot database management and access class."""
 
   def __init__(self,
                 data_directory="./data/imitate_db/",
@@ -48,6 +47,7 @@ class ImitateDB(object):
                 flexible_cache_step=0.5,
                 debug_mode=False
               ):
+    """Set up directories, files, and read database metafile."""
     self._alive = True
     self.data_directory = data_directory
     self.max_cache_entries = max_cache_entries if max_cache_entries > 0 else 1
@@ -77,9 +77,11 @@ class ImitateDB(object):
       raise Exception("Integrity violation, code: " + str(integrity_result))
 
   def __exit__(self, exc_type, exc_value, exc_traceback):
+    """Ensure the DB is closed on exit."""
     self.close()
 
   def __del__(self):
+    """Ensure the DB is closed on class deletion."""
     if self._alive and self.meta and self.data_directory:
       self.close(write_back_cache=False)
 
@@ -148,16 +150,19 @@ class ImitateDB(object):
     return result
 
   def close(self, write_back_cache=True):
+    """Ensure all data is written to file on close."""
     self._alive = False
     self.write_back(write_back_cache=write_back_cache)
 
   def write_back(self, write_back_cache=True):
+    """Save meta file and user files."""
     self._write_meta_file(self.meta)
     if write_back_cache:
       for name, data in self.db_cache.items():
         self._write_user_file(name, data)
 
   def integrity_check(self):
+    """Ensure the DB structure is good to use / hasn't been damaged."""
     name_files = []
     for entry in os.listdir(self.data_directory):
       if entry.endswith(".json") and entry.startswith("user_"):
@@ -190,9 +195,11 @@ class ImitateDB(object):
     return INTEGRITY.OKAY
 
   def user_exists(self, name):
+    """See if a user is in the list of users."""
     return self.meta["names"].has_key(self._get_true_name(name))
 
   def add_user(self, name):
+    """Add a user to the list of users."""
     if self.user_exists(name):
       return False
     self._write_user_file(name, self._default_user_data(name))
@@ -253,6 +260,7 @@ class ImitateDB(object):
     return False
 
   def get_name_messages(self, name):
+    """Get messages for a user."""
     if self.debug_mode:
       print("[debug] Getting messages for name:", name)
     self._need_name(name)
@@ -265,6 +273,7 @@ class ImitateDB(object):
     return None
 
   def get_name_messages_string(self, name):
+    """Get messages for a user as a single string that can be used by markovify."""
     result = self.get_name_messages(name)
     if result:
       return "\r\n".join(result).encode('ascii', 'ignore')
@@ -287,6 +296,7 @@ class ImitateDB(object):
         del self.names_needed_in_cache[name]
 
   def add_message(self, name, message):
+    """Add a message to a user."""
     if not self.user_exists(name):
       self.add_user(name)
     self._need_name(name)
