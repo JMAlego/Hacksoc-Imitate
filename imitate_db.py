@@ -34,7 +34,7 @@ class Enum(set):
 
 INTEGRITY = Enum(["OKAY",
                   "MISSING_USER_FILE",
-                  "ALIAS_MISSMATCH",
+                  "ALIAS_MISMATCH",
                   "NAME_FILE_COLLISION",
                   "EXTRANEOUS_NAME_FILES"])
 
@@ -48,6 +48,7 @@ class ImitateDB(object):
                 flexible_cache_step=0.5,
                 debug_mode=False
               ):
+    self._alive = True
     self.data_directory = data_directory
     self.max_cache_entries = max_cache_entries if max_cache_entries > 0 else 1
     self.meta_file = os.path.join(data_directory, "meta.json")
@@ -79,7 +80,7 @@ class ImitateDB(object):
     self.close()
 
   def __del__(self):
-    if self.meta and self.data_directory:
+    if self._alive and self.meta and self.data_directory:
       self.close(write_back_cache=False)
 
   @staticmethod
@@ -93,7 +94,7 @@ class ImitateDB(object):
   @staticmethod
   def _hash_name(name):
     hasher = hashlib.sha256()
-    hasher.update(name)
+    hasher.update(name.encode('utf8'))
     return hasher.hexdigest()
 
   def _get_true_name(self, name):
@@ -113,7 +114,7 @@ class ImitateDB(object):
     user_file = self._user_file_path(name)
     while user_file in self.access_lock:
       time.sleep(0.01)
-      print self.access_lock
+      print(self.access_lock)
     self.access_lock.append(user_file)
     with open(user_file, "w") as fp:
       json.dump(data, fp)
@@ -147,6 +148,7 @@ class ImitateDB(object):
     return result
 
   def close(self, write_back_cache=True):
+    self._alive = False
     self.write_back(write_back_cache=write_back_cache)
 
   def write_back(self, write_back_cache=True):
@@ -180,7 +182,7 @@ class ImitateDB(object):
         name_files.remove(name_file_path)
 
     if names_with_aliases:
-      return INTEGRITY.ALIAS_MISSMATCH
+      return INTEGRITY.ALIAS_MISMATCH
 
     if name_files:
       return INTEGRITY.EXTRANEOUS_NAME_FILES
@@ -205,19 +207,19 @@ class ImitateDB(object):
 
   def _restrict_cache(self):
     if self.debug_mode:
-      print "[debug] Restricting cache..."
+      print("[debug] Restricting cache...")
     max_entries = self.max_cache_entries + math.floor(self.flexable_cache_index)
     number_to_remove = len(self.db_cache) - max_entries
     if number_to_remove < 0:
       if self.flexable_cache_index > 0:
         self.flexable_cache_index -= self.flexible_cache_step
         if self.debug_mode:
-          print "[debug] Reducing flexable cache to:", self.flexable_cache_index
+          print("[debug] Reducing flexable cache to:", self.flexable_cache_index)
     elif number_to_remove > 0:
       if self.flexable_cache_index < self.cache_flexability:
         self.flexable_cache_index += self.flexible_cache_step
         if self.debug_mode:
-          print "[debug] Increasing flexable cache to:", self.flexable_cache_index
+          print("[debug] Increasing flexable cache to:", self.flexable_cache_index)
     if number_to_remove > 0:
       entries_to_remove = []
       for name, data in self.db_cache.items():
@@ -231,16 +233,16 @@ class ImitateDB(object):
       for to_remove in entries_to_remove:
         if not self.names_needed_in_cache.has_key(to_remove[0]):
           if self.debug_mode:
-            print "          Unloading name:", to_remove[0]
+            print("          Unloading name:", to_remove[0])
           self._write_user_file(to_remove[0], self.db_cache[to_remove[0]])
           del self.db_cache[to_remove[0]]
         else:
           if self.debug_mode:
-            print "          Skipping required name:", to_remove[0]
+            print("          Skipping required name:", to_remove[0])
 
   def _load_name_into_cache(self, name):
     if self.debug_mode:
-      print "[debug] Loading into cache:", name
+      print("[debug] Loading into cache:", name)
     if self.meta["names"].has_key(name):
       self._restrict_cache()
       if not self._in_cache(name):
@@ -252,7 +254,7 @@ class ImitateDB(object):
 
   def get_name_messages(self, name):
     if self.debug_mode:
-      print "[debug] Getting messages for name:", name
+      print("[debug] Getting messages for name:", name)
     self._need_name(name)
     if self._load_name_into_cache(name):
       result = self.db_cache[name]["messages"]
@@ -274,13 +276,13 @@ class ImitateDB(object):
     else:
       self.names_needed_in_cache[name] = 1
     if self.debug_mode:
-      print "[debug] Needing name:", name, "now at", self.names_needed_in_cache[name]
+      print("[debug] Needing name:", name, "now at", self.names_needed_in_cache[name])
 
   def _stop_needing_name(self, name):
     if self.names_needed_in_cache.has_key(name):
       self.names_needed_in_cache[name] -= 1
       if self.debug_mode:
-        print "[debug] Un-needing name:", name, "now at", self.names_needed_in_cache[name]
+        print("[debug] Un-needing name:", name, "now at", self.names_needed_in_cache[name])
       if self.names_needed_in_cache[name] == 0:
         del self.names_needed_in_cache[name]
 
@@ -295,6 +297,6 @@ class ImitateDB(object):
     self._restrict_cache()
 
 if __name__ == "__main__":
-  print "Testing..."
+  print("Testing...")
   db = ImitateDB()
   db.close()
