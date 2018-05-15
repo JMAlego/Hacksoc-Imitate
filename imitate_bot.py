@@ -6,7 +6,10 @@ from time import sleep
 import signal
 import sys
 import re
-import ConfigParser
+try:
+  import ConfigParser
+except ImportError:
+  import configparser as ConfigParser
 
 import markovify
 from slacksocket import SlackSocket
@@ -59,13 +62,13 @@ class ImitateBot(object):
     """Generate an imitate string for a user."""
     if self.slack._find_user_name(name):
       if self.debug_mode:
-        print "[debug] Generating chain for:", name if name else None
+        print("[debug] Generating chain for:", name if name else None)
       mk_text = self.db.get_name_messages_string(name)
       if self.debug_mode:
-        print "[debug] Got", len(mk_text if mk_text else ""), "characters of data"
+        print("[debug] Got", len(mk_text if mk_text else ""), "characters of data")
       if mk_text is None:
         return None
-      mk = markovify.NewlineText(mk_text)
+      mk = markovify.NewlineText(mk_text.decode('utf8'))
       result = None
       for _ in range(self.imitate_attempts):
         result = mk.make_sentence(tires=100, max_words=2500)
@@ -73,7 +76,7 @@ class ImitateBot(object):
           break
       return result
     if self.debug_mode:
-      print "[debug] Could not find user:", name if name else None
+      print("[debug] Could not find user:", name if name else None)
     return False
 
   def handle_message(self, event):
@@ -100,7 +103,7 @@ class ImitateBot(object):
               self.slack.send_msg("User not found!", channel_id=event.event["channel"], confirm=False)
         else:
           self.slack.send_msg("Usage: !imitate @USERNAME", channel_id=event.event["channel"], confirm=False)
-          print "[debug] Weird stuff:", event.event
+          print("[debug] Weird stuff:", event.event)
     else:
       self.db.add_message(event.event["user"], event.event["text"])
 
@@ -109,7 +112,7 @@ if __name__ == "__main__":
   config = ConfigParser.ConfigParser()
   config.read("imitate.cfg")
 
-  print "Imitate Bot Initialising..."
+  print("Imitate Bot Initialising...")
 
   debug = config.get("imitate_bot", "debug").lower() == "true" or config.get("imitate_bot", "debug") == "1"
 
@@ -125,5 +128,5 @@ if __name__ == "__main__":
   signal.signal(signal.SIGINT, _exit_signal_handler)
   signal.signal(signal.SIGTERM, _exit_signal_handler)
 
-  print "Starting Bot..."
+  print("Starting Bot...")
   bot.start()
