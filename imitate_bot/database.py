@@ -59,6 +59,7 @@ class UserData:
                 data = json_load(file_handle)
                 self._messages = data["messages"]
                 self.last_update = data["last_update"]
+                self.last_access = time()
                 self._loaded = True
 
     def unload(self):
