@@ -15,7 +15,7 @@ def main():
     try:
         bot.handle_messages()
     except Exception as error:
-        print(error.with_traceback())
+        print(Exception.with_traceback(error))
         print("Exception occurred, exiting...")
     bot.close()
 
