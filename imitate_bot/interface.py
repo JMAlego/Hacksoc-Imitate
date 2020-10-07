@@ -2,12 +2,23 @@
 from slacksocket import SlackSocket
 
 
+class _PatchedSlackSocket(SlackSocket):
+    """Patched version to patch minor issues."""
+
+    def get_event(self, *etypes, timeout=None):
+        """Patched get_event."""
+        # The original can have negative timeouts which causes errors
+        if timeout is not None and timeout < 0:
+            timeout = 0
+        return super().get_event(*etypes, timeout=timeout)
+
+
 class SlackInterface:
     """A simplistic Slack RTM wrapper."""
 
     def __init__(self, token):
         """Initialise the interface."""
-        self._socket = SlackSocket(token)
+        self._socket = _PatchedSlackSocket(token)
         self._closed = False
 
     def stop(self):
