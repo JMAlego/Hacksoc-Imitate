@@ -60,7 +60,7 @@ class UserData:
         """Unload data (and save)."""
         if self._loaded:
             self.save()
-            self.messages = None
+            self._messages = None
             self.last_update = None
             self._loaded = False
 
