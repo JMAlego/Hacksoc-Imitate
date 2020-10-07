@@ -1,25 +1,34 @@
 """Core logic for Slack Imitate Bot."""
+import logging
 import signal
 
 from .command import ParseError, is_possible_command, parse_command
-from .interface import SlackInterface
+from .config import ImitateConfig
 from .database import ImitateDatabase
 from .imitator import imitate
+from .interface import SlackInterface
 
 ABOUT_MESSAGE = "Hi! I'm an imitate bot running via the ReggieBot user.\nI'm a brand new 2020 implementation! I may be buggy still!"
 SORRY_MESSAGE = "Sorry, I couldn't imitate that user as I don't have enough data on them yet."
 IMITATE_TEMPLATE = """\
-I think <@{user}> might say:
+I think {user} might say:
 >>> {message}"""
+MENTION_TEMPLATE = "<@{user}>"
+
+LOGGER = logging.getLogger("imitate_bot")
 
 
 class ImitateBot:
     """Imitate bot."""
 
-    def __init__(self, token: str, data_path: str):
+    def __init__(self, config: ImitateConfig):
         """Initialise the bot."""
-        self.interface = SlackInterface(token)
-        self.db = ImitateDatabase(data_path)
+        # There's probably a nicer way of handling logging config but this will do for now
+        LOGGER.setLevel(logging.DEBUG if config.debug else logging.INFO)
+
+        self.interface = SlackInterface(config.bot_auth_token)
+        self.db = ImitateDatabase(config.data_path)
+        self._config = config
         self._old_handler = signal.signal(signal.SIGINT, self._signal_handler)
         self._closed = False
 
@@ -41,8 +50,12 @@ class ImitateBot:
                     if result is None:
                         self.interface.send_message(SORRY_MESSAGE, message.channel)
                     else:
+                        if self._config.mention_users:
+                            user_mention = MENTION_TEMPLATE.format(user_to_imitate)
+                        else:
+                            user_mention = "they"
                         self.interface.send_message(
-                            IMITATE_TEMPLATE.format(user=user_to_imitate, message=result),
+                            IMITATE_TEMPLATE.format(user=user_mention, message=result),
                             message.channel)
             except ParseError:
                 self.interface.send_message(ABOUT_MESSAGE, message.channel)

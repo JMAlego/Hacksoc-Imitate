@@ -1,4 +1,6 @@
 [imitate_bot]
 bot_auth_token=xoxb-...
 bot_id=U...
-debug=false
+data_path=./data/
+mention_users=true
+debug=true

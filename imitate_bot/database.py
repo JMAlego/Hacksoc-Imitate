@@ -1,10 +1,13 @@
 """Database for imitate bot."""
+import logging
 from hashlib import sha256
 from json import dump as json_dump
 from json import load as json_load
 from os import listdir, path
 from time import time
 from typing import Dict, List, Optional
+
+LOGGER = logging.getLogger("imitate_bot")
 
 
 class UserData:
@@ -50,6 +53,7 @@ class UserData:
     def load(self):
         """Load user data from file."""
         if not self._loaded:
+            LOGGER.info("Loading file {}".format(self.file_name))
             with open(self.file_path, "r") as file_handle:
                 data = json_load(file_handle)
                 self._messages = data["messages"]
@@ -59,6 +63,7 @@ class UserData:
     def unload(self):
         """Unload data (and save)."""
         if self._loaded:
+            LOGGER.info("Unloading file {}".format(self.file_name))
             self.save()
             self._messages = None
             self.last_update = None
@@ -88,7 +93,7 @@ class UserData:
     def save(self):
         """Save data without unloading."""
         if self._loaded:
-            print("Saving {}".format(self.file_path))
+            LOGGER.info("Saving file {}".format(self.file_name))
             with open(self.file_path, "w") as file_handle:
                 json_dump(self.to_dict(), file_handle)
 
@@ -108,6 +113,7 @@ class ImitateDatabase:
         self._data_path = data_path
 
     def _check_for_writeback(self):
+        LOGGER.info("Checking for writeback...")
         old_time = self._last_writeback
         self._last_writeback = time()
         if self._last_writeback - old_time > self._writeback_interval:
@@ -115,11 +121,13 @@ class ImitateDatabase:
 
     def writeback(self):
         """Writeback all data to the database."""
+        LOGGER.info("Writing back user data...")
         for user in self._users.values():
             user.save()
         self._last_writeback = time()
 
     def _check_for_unload(self):
+        LOGGER.info("Checking for users to unload...")
         for user in self._users.values():
             if time() - user.last_access > self._unload_time:
                 user.unload()
