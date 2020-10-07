@@ -49,6 +49,7 @@ class UserData:
         self.load()
         self._messages.append(message)
         self.last_update = time()
+        self.last_access = self.last_update
 
     def load(self):
         """Load user data from file."""
