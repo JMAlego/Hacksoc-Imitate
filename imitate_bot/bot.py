@@ -49,7 +49,7 @@ class ImitateBot:
 
                     state_size = 2
                     if "depth" in parsed_command.arguments:
-                        state_size = parsed_command["depth"]
+                        state_size = parsed_command.arguments["depth"]
 
                     result = imitate(self.db.get_messages(user_to_imitate), state_size=state_size)
 
