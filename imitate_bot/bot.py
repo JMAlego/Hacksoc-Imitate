@@ -14,6 +14,7 @@ IMITATE_TEMPLATE = """\
 I think {user} might say:
 >>> {message}"""
 MENTION_TEMPLATE = "<@{user}>"
+DEPTH_ERROR_MESSAGE = "Sorry, a depth (state size) of between 1-4 (inclusive) is required, other sizes will fail to produce output."
 
 LOGGER = logging.getLogger("imitate_bot")
 
@@ -50,6 +51,9 @@ class ImitateBot:
                     state_size = 2
                     if "depth" in parsed_command.arguments:
                         state_size = parsed_command.arguments["depth"]
+                    if state_size > 4 or state_size < 1:
+                        self.interface.send_message(DEPTH_ERROR_MESSAGE, message.channel)
+                        return
 
                     result = imitate(self.db.get_messages(user_to_imitate), state_size=state_size)
 
