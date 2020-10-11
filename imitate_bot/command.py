@@ -47,7 +47,7 @@ class Command:
 
         self.action, *self.data = action
 
-        self.arguments = []
+        self.arguments = {}
         for item in rest:
             item_type, item_value = item
             if item_type == "arguments":
