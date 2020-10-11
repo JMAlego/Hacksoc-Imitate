@@ -51,8 +51,9 @@ class Command:
         for item in rest:
             item_type, item_value = item
             if item_type == "arguments":
-                argument_key, argument_value = item_value
-                self.arguments[argument_key] = argument_value
+                for argument in item_value:
+                    argument_key, argument_value = argument
+                    self.arguments[argument_key] = argument_value
 
 
 class CommandTransformer(Transformer):
