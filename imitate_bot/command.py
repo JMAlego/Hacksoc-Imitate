@@ -1,7 +1,7 @@
 """Command parser for imitate bot."""
 from lark import Lark, Transformer, LexError, ParseError as LarkParseError
 from dataclasses import dataclass
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Dict
 
 command_grammar = r"""
 start: "!imitate" _WS+ command (_WS+ arguments)?
@@ -39,7 +39,7 @@ class Command:
 
     action: str
     data: List[str]
-    arguments: List[Tuple[str, ArgumentData]]
+    arguments: Dict[str, ArgumentData]
 
     def __init__(self, children):
         """Initialise command class."""
@@ -49,8 +49,10 @@ class Command:
 
         self.arguments = []
         for item in rest:
-            if item[0] == "arguments":
-                self.arguments = item[1]
+            item_type, item_value = item
+            if item_type == "arguments":
+                argument_key, argument_value = item_value
+                self.arguments[argument_key] = argument_value
 
 
 class CommandTransformer(Transformer):

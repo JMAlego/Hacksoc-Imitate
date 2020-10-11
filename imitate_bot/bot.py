@@ -45,8 +45,14 @@ class ImitateBot:
             try:
                 parsed_command = parse_command(message["text"])
                 if parsed_command.action == "imitate_user":
-                    user_to_imitate = parsed_command.data[0]
-                    result = imitate(self.db.get_messages(user_to_imitate))
+                    user_to_imitate, *_ = parsed_command.data
+
+                    state_size = 2
+                    if "depth" in parsed_command.arguments:
+                        state_size = parsed_command["depth"]
+
+                    result = imitate(self.db.get_messages(user_to_imitate), state_size=state_size)
+
                     if result is None:
                         self.interface.send_message(SORRY_MESSAGE, message.channel)
                     else:
