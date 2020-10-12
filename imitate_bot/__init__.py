@@ -1,0 +1,1 @@
+"""HackSoc Imitate Bot."""

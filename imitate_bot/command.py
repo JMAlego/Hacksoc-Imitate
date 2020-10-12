@@ -19,7 +19,7 @@ argument_depth: "depth" "=" INT
 argument_prompt: "prompt" "=" ESCAPED_STRING
 
 USERNAME: "<@" ("U" | "u") (LETTER | DIGIT)+ ">"
-_WS: WS
+_WS: WS | "\xa0"
 
 %import common.ESCAPED_STRING
 %import common.INT
