@@ -1,7 +1,10 @@
 """Command parser for imitate bot."""
-from lark import Lark, Transformer, LexError, ParseError as LarkParseError
 from dataclasses import dataclass
-from typing import List, Tuple, Union, Dict
+from typing import Dict, List, Union, cast
+
+from lark import Lark, LexError
+from lark import ParseError as LarkParseError
+from lark import Transformer
 
 command_grammar = r"""
 start: "!imitate" _WS+ command (_WS+ arguments)?
@@ -83,7 +86,8 @@ def parse_command(message: str) -> Command:
     except LarkParseError:
         raise ParseError("Error parsing command.")
 
-    return parsed
+    # CommandTransformer has run so the parsed command is actually of type Command
+    return cast(Command, parsed)
 
 
 __all__ = ["parse_command", "is_possible_command", "ParseError", "Command"]

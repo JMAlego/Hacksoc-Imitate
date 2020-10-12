@@ -1,7 +1,6 @@
 """The Hacksoc Slack Imitate Bot."""
 import logging
-from traceback import print_tb
-from configparser import ConfigParser
+from traceback import print_exception
 
 from .bot import ImitateBot
 from .config import ImitateConfig
@@ -16,8 +15,7 @@ def main():
     try:
         bot.handle_messages()
     except Exception as error:
-        print_tb(error.__traceback__)
-        print(error)
+        print_exception(type(error), error, error.__traceback__)
         print("Exception occurred, exiting...")
     bot.close()
 
