@@ -8,9 +8,9 @@ The bot was designed for the HackSoc Slack server. You can blame [Sam](https://g
 ## Dependencies
 
 This bot depends on:
-- [Markovify](/jsvine/markovify) - to handle the markov chains,
-- [Slacksocket](/vektorlab/slacksocket) - to handle Slack communication,
-- [Lark](/lark-parser/lark) - to parse bot commands.
+- [Markovify](https://github.com/jsvine/markovify) - to handle the markov chains,
+- [Slacksocket](https://github.com/vektorlab/slacksocket) - to handle Slack communication,
+- [Lark](https://github.com/lark-parser/lark) - to parse bot commands.
 
 You can install these using the `REQUIREMENTS` file with `pip`. This should be as simple as:
 
